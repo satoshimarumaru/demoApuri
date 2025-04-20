@@ -4,15 +4,18 @@ const path = require("path")
 const mongoose = require("mongoose")
 const ejsMate = require("ejs-mate")
 const Campground = require("./models/campground")
+const Review = require("./models/review")
 const catchAsync = require("./utils/catchAsync")
 const methodOverride = require("method-override");
 const { renderFile } = require("ejs");
 const ExpressError = require("./utils/ExpressError")
 const campground = require("./models/campground");
-const {campgroundSchema} = require("./schemas")
+const {campgroundSchema,reviewSchema} = require("./schemas")
+
 // postman使うために必要（下2行）
 const cors = require("cors");
 app.use(cors());
+
 app.engine("ejs", ejsMate)
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"))
@@ -21,7 +24,14 @@ app.use(methodOverride("_method"))
 
 const validationCampground = (req,res,next) => {
     const result = campgroundSchema.validate(req.body)
-    console.log("📩 受け取ったリクエストボディ:", req.body);
+    if(result.error) {
+        const msg = result.error.details.map(detail => detail.message).join(", ")
+    throw new ExpressError(msg,400)
+    }
+    next()
+}
+const validationReview = (req,res,next) => {
+    const result = reviewSchema.validate(req.body)
     if(result.error) {
         const msg = result.error.details.map(detail => detail.message).join(", ")
     throw new ExpressError(msg,400)
@@ -80,13 +90,34 @@ app.delete("/campgrounds/:id", catchAsync (async(req,res) => {
 // キャンプ場詳細ページ
 app.get("/campgrounds/:id", catchAsync (async(req,res) => {
     const { id } = req.params
-    const campground = await Campground.findById(id)
+    const campground = await Campground.findById(id).populate("reviews")
     res.render("campgrounds/shows",{campground})
 }))
+
+// キャンプ場のレビュー関連
+app.post("/campgrounds/:id/reviews",validationReview,  catchAsync( async (req,res) => {
+    const campground = await Campground.findById(req.params.id)
+    const review = new Review(req.body.review)
+    campground.reviews.push(review)
+    await review.save()
+    await campground.save()
+    res.redirect(`/campgrounds/${campground._id}`)
+}))
+
+// キャンプ場のレビュー削除
+app.delete("/campgrounds/:id/reviews/:reviewId", catchAsync (async(req,res) => {
+    const { id, reviewId } = req.params
+    await Review.findByIdAndDelete(reviewId)
+    await Campground.findByIdAndUpdate(id, {$pull: { reviews:reviewId}})
+    res.redirect(`/campgrounds/${id}`)
+}))
+
 
 app.all("*", (req, res, next) => {
     next(new ExpressError("ページが見つかりません",404))
 })
+
+
 
 // エラーの処理
 app.use((err,req,res,next) => {
