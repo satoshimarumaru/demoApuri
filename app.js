@@ -12,6 +12,7 @@ const ExpressError = require("./utils/ExpressError")
 const campground = require("./models/campground");
 const campgroundRoutes = require("./routes/campgrounds")
 const reviewRoutes = require("./routes/reviews")
+const session = require("express-session")
 
 // postman使うために必要（下2行）
 const cors = require("cors");
@@ -23,6 +24,21 @@ app.set("views", path.join(__dirname, "views"))
 app.use(express.urlencoded({extended:true}))
 app.use(methodOverride("_method"))
 app.use(express.static(path.join(__dirname, "public")))
+
+// セッションの設定
+const sessionConfig = {
+    secret: "mysecret",
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+        httpOnly: true,
+    }
+}
+
+app.use(session(sessionConfig))
+
+
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp',{useNewUrlParser:true,useUnifiedTopology:true,useCreateIndex:true})
