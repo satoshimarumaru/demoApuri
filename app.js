@@ -10,7 +10,8 @@ const methodOverride = require("method-override");
 const { renderFile } = require("ejs");
 const ExpressError = require("./utils/ExpressError")
 const campground = require("./models/campground");
-const {campgroundSchema,reviewSchema} = require("./schemas")
+const campgroundRoutes = require("./routes/campgrounds")
+const reviewRoutes = require("./routes/reviews")
 
 // postman使うために必要（下2行）
 const cors = require("cors");
@@ -22,22 +23,6 @@ app.set("views", path.join(__dirname, "views"))
 app.use(express.urlencoded({extended:true}))
 app.use(methodOverride("_method"))
 
-const validationCampground = (req,res,next) => {
-    const result = campgroundSchema.validate(req.body)
-    if(result.error) {
-        const msg = result.error.details.map(detail => detail.message).join(", ")
-    throw new ExpressError(msg,400)
-    }
-    next()
-}
-const validationReview = (req,res,next) => {
-    const result = reviewSchema.validate(req.body)
-    if(result.error) {
-        const msg = result.error.details.map(detail => detail.message).join(", ")
-    throw new ExpressError(msg,400)
-    }
-    next()
-}
 
 mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp',{useNewUrlParser:true,useUnifiedTopology:true,useCreateIndex:true})
 .then(() => {
@@ -51,66 +36,9 @@ app.get("/", (req,res) => {
     res.render("home")
 })
 
-// キャンプ場一覧ページ
-app.get("/campgrounds", catchAsync (async (req,res) => {
-    const campgrounds = await Campground.find({})
-    res.render("campgrounds/index",{campgrounds})
-}))
+app.use("/campgrounds", campgroundRoutes)
+app.use("/campgrounds/:id/reviews", reviewRoutes)
 
-// キャンプ場新規登録
-app.get("/campgrounds/new", (req,res) => {
-    res.render("campgrounds/new")
-})
-app.post("/campgrounds", validationCampground , catchAsync (async(req,res) => {
-    const newCampground = new Campground(req.body.campground)
-    await newCampground.save()
-    res.redirect(`/campgrounds/${newCampground._id}`)
-}))
-
-// キャンプ場編集
-app.get("/campgrounds/:id/edit", catchAsync (async(req,res) => {
-    const { id } = req.params
-    const campground = await Campground.findById(id)
-    res.render("campgrounds/edit",{campground})
-}))
-app.put("/campgrounds/:id", validationCampground ,catchAsync (async(req,res) => {
-    const { id } = req.params
-    const campground = await Campground.findByIdAndUpdate(id,{...req.body.campground},{runValidators:true,new:true,useFindAndModify: false})
-    res.redirect(`/campgrounds/${campground._id}`)
-}))
-
-// キャンプ場削除
-app.delete("/campgrounds/:id", catchAsync (async(req,res) => {
-    const { id } = req.params
-    await Campground.findByIdAndDelete(id)
-    res.redirect("/campgrounds")
-}))
-
-
-// キャンプ場詳細ページ
-app.get("/campgrounds/:id", catchAsync (async(req,res) => {
-    const { id } = req.params
-    const campground = await Campground.findById(id).populate("reviews")
-    res.render("campgrounds/shows",{campground})
-}))
-
-// キャンプ場のレビュー関連
-app.post("/campgrounds/:id/reviews",validationReview,  catchAsync( async (req,res) => {
-    const campground = await Campground.findById(req.params.id)
-    const review = new Review(req.body.review)
-    campground.reviews.push(review)
-    await review.save()
-    await campground.save()
-    res.redirect(`/campgrounds/${campground._id}`)
-}))
-
-// キャンプ場のレビュー削除
-app.delete("/campgrounds/:id/reviews/:reviewId", catchAsync (async(req,res) => {
-    const { id, reviewId } = req.params
-    await Review.findByIdAndDelete(reviewId)
-    await Campground.findByIdAndUpdate(id, {$pull: { reviews:reviewId}})
-    res.redirect(`/campgrounds/${id}`)
-}))
 
 
 app.all("*", (req, res, next) => {
