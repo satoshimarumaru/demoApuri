@@ -13,6 +13,7 @@ const campground = require("./models/campground");
 const campgroundRoutes = require("./routes/campgrounds")
 const reviewRoutes = require("./routes/reviews")
 const session = require("express-session")
+const flash = require("connect-flash")
 
 // postman使うために必要（下2行）
 const cors = require("cors");
@@ -37,8 +38,12 @@ const sessionConfig = {
 }
 
 app.use(session(sessionConfig))
-
-
+app.use(flash())
+app.use((req,res,next) => {
+    res.locals.success = req.flash("success")
+    res.locals.error = req.flash("error")
+    next()
+})
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp',{useNewUrlParser:true,useUnifiedTopology:true,useCreateIndex:true})
