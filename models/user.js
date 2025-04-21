@@ -10,5 +10,15 @@ const userSchema = new Schema({
     }
 })
 
-userSchema.plugin(passportLocalMongoose)
+userSchema.plugin(passportLocalMongoose, {
+    errorMessages: {
+        IncorrectPassword: "パスワードが違います",
+        UserExists: "そのユーザー名はすでに使われています",
+        UserNotFound: "そのユーザーは見つかりませんでした",
+    }
+})
+
+
+
+
 module.exports = mongoose.model("User", userSchema)

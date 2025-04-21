@@ -12,6 +12,7 @@ const ExpressError = require("./utils/ExpressError")
 const campground = require("./models/campground");
 const campgroundRoutes = require("./routes/campgrounds")
 const reviewRoutes = require("./routes/reviews")
+const usersRoutes = require("./routes/users")
 const session = require("express-session")
 const flash = require("connect-flash")
 const passport = require("passport")
@@ -72,7 +73,7 @@ app.get("/", (req,res) => {
 
 app.use("/campgrounds", campgroundRoutes)
 app.use("/campgrounds/:id/reviews", reviewRoutes)
-
+app.use("/", usersRoutes)   
 
 
 app.all("*", (req, res, next) => {
