@@ -4,7 +4,8 @@ const catchAsync = require("../utils/catchAsync")
 const ExpressError = require("../utils/ExpressError")
 const Campground = require("../models/campground")
 const {campgroundSchema} = require("../schemas")
-const { isLoggedIn } = require("../middleware")
+const { isLoggedIn } = require("../middleware");
+const campground = require('../models/campground');
 
 const validationCampground = (req,res,next) => {
     const result = campgroundSchema.validate(req.body)
@@ -27,6 +28,7 @@ router.get("/new", isLoggedIn,(req,res) => {
 })
 router.post("/", isLoggedIn, validationCampground , catchAsync (async(req,res) => {
     const newCampground = new Campground(req.body.campground)
+    newCampground.author = req.user._id    
     await newCampground.save()
     req.flash("success","キャンプ場を登録しました")
     res.redirect(`/campgrounds/${newCampground._id}`)
@@ -44,9 +46,14 @@ router.get("/:id/edit", isLoggedIn,catchAsync (async(req,res) => {
 }))
 router.put("/:id", isLoggedIn,validationCampground ,catchAsync (async(req,res) => {
     const { id } = req.params
-    const campground = await Campground.findByIdAndUpdate(id, {...req.body.campground}, { runValidators: true, new: true });
+    const campground = await Campground.findById(id)
+    if(!campground.author.equals(req.user._id)) {
+        req.flash("error","このキャンプ場を更新する権限はありません")
+        return res.redirect(`/campgrounds/${id}`)
+    }
+    const camp = await Campground.findByIdAndUpdate(id, {...req.body.campground}, { runValidators: true, new: true });
     res.flash("success","キャンプ場を更新しました")
-    res.redirect(`/campgrounds/${campground._id}`)
+    res.redirect(`/campgrounds/${camp._id}`)
 }))
 
 // キャンプ場削除
@@ -61,7 +68,8 @@ router.delete("/:id",isLoggedIn, catchAsync (async(req,res) => {
 // キャンプ場詳細ページ
 router.get("/:id", catchAsync (async(req,res) => {
     const { id } = req.params
-    const campground = await Campground.findById(id).populate("reviews")
+    const campground = await Campground.findById(id).populate("reviews").populate("author")
+    console.log(campground)
     if(!campground) {
         req.flash("error","キャンプ場が見つかりません")
         return res.redirect("/campgrounds")

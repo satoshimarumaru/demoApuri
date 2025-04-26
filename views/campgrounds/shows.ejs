@@ -10,12 +10,15 @@
             <ul class="list-group list-group-flush">
             <li class="list-group-item text-muted"><%= campground.location %></li>
             <li class="list-group-item text-muted">￥<%= campground.price %>/泊</li>
+            <li class="list-group-item ">登録者:<%= campground.author.username %></li>
             </ul>
             <div class="card-body">
+                <% if(campground.author.equals(currentUser._id)) { %>
                 <a href="/campgrounds/<%= campground._id %>/edit" class="btn btn-outline-dark">編集する</a>
                 <form class="d-inline" action="/campgrounds/<%= campground._id %>?_method=DELETE" method="post">
                     <button type="submit" class="btn btn-outline-dark">削除する</button>
                 </form>
+                <% } %>
             </div>
         </div>
     </div>
