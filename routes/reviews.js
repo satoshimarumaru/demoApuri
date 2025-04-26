@@ -5,6 +5,7 @@ const ExpressError = require("../utils/ExpressError")
 const Campground = require("../models/campground")
 const {reviewSchema} = require("../schemas")
 const Review = require("../models/review")
+const reviews = require('../controllers/reviews')
 
 const validationReview = (req,res,next) => {
     const result = reviewSchema.validate(req.body)
@@ -17,24 +18,10 @@ const validationReview = (req,res,next) => {
 
 
 // キャンプ場のレビュー登録
-router.post("/",validationReview,  catchAsync( async (req,res) => {
-    const campground = await Campground.findById(req.params.id)
-    const review = new Review(req.body.review)
-    campground.reviews.push(review)
-    await review.save()
-    await campground.save()
-    req.flash("success","レビューを登録しました")
-    res.redirect(`/campgrounds/${campground._id}`)
-}))
+router.post("/",validationReview,  catchAsync( reviews.createReview))
 
 // キャンプ場のレビュー削除
-router.delete("/:reviewId", catchAsync (async(req,res) => {
-    const { id, reviewId } = req.params
-    await Review.findByIdAndDelete(reviewId)
-    await Campground.findByIdAndUpdate(id, {$pull: { reviews:reviewId}})
-    req.flash("success","レビューを削除しました")
-    res.redirect(`/campgrounds/${id}`)
-}))
+router.delete("/:reviewId", catchAsync (reviews.deleteReview))
 
 
 module.exports = router
