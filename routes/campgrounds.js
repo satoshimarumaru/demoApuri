@@ -7,6 +7,9 @@ const Campground = require("../models/campground")
 const {campgroundSchema} = require("../schemas")
 const { isLoggedIn } = require("../middleware");
 const campground = require('../models/campground');
+const multer = require('multer');
+const upload  = multer({dest:"uploads/"})
+
 
 const validationCampground = (req,res,next) => {
     const result = campgroundSchema.validate(req.body)

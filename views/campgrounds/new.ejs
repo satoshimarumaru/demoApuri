@@ -2,7 +2,7 @@
 <div class="row">
 <h1 class="text-center">新規登録</h1>
 <div class="offset-3 col-6">
-    <form action="/campgrounds" method="post" novalidate class="validated-form">
+    <form action="/campgrounds" method="post" novalidate class="validated-form" enctype="multipart/form-data">
 <div class="mb-3">
         <label class="form-label" for="title">タイトル</label>
         <input
@@ -26,7 +26,7 @@
         />
     </div>
     <div class="mb-3">
-        <label class="form-label" for="image">画像URL</label>
+        <!-- <label class="form-label" for="image">画像URL</label>
         <input
         class="form-control"
         type="text"
@@ -34,7 +34,8 @@
         id="image"
         placeholder="画像URLを入力"
         required
-        />
+        /> -->
+        <input type="file" name="image" multiple>
     </div>
     <div class="mb-3">
         <label class="form-label" for="price">価格</label>
