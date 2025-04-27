@@ -8,7 +8,8 @@ const {campgroundSchema} = require("../schemas")
 const { isLoggedIn } = require("../middleware");
 const campground = require('../models/campground');
 const multer = require('multer');
-const upload  = multer({dest:"uploads/"})
+const {storage} = require("../cloudinary")
+const upload  = multer({storage})
 
 
 const validationCampground = (req,res,next) => {
@@ -23,9 +24,12 @@ const validationCampground = (req,res,next) => {
 
 router.route("/")
     .get(catchAsync(campgrounds.index))
-    .post(isLoggedIn, validationCampground , catchAsync (campgrounds.createCampground))
+    .post(isLoggedIn,upload.array("image"),catchAsync (campgrounds.createCampground))
 
-// キャンプ場新規登録
+
+
+
+
 router.get("/new", isLoggedIn, campgrounds.newCampground)
 
 

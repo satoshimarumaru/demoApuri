@@ -13,8 +13,10 @@ module.exports.newCampground = (req, res) => {
 
 module.exports.createCampground = async (req, res) => { 
     const newCampground = new Campground(req.body.campground)
+    newCampground.images = req.files.map(f => ({url:f.path, filename:f.filename}))
     newCampground.author = req.user._id    
     await newCampground.save()
+    console.log(newCampground)
     req.flash("success","キャンプ場を登録しました")
     res.redirect(`/campgrounds/${newCampground._id}`)
 }
