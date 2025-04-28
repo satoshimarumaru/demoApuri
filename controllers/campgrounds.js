@@ -1,5 +1,7 @@
 const Campground = require('../models/campground');
-
+const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
+const mapBoxToken = process.env.MAPBOX_TOKEN
+const geocoder = mbxGeocoding({ accessToken: mapBoxToken });
 
 module.exports.index = async (req, res) => {
     const campgrounds = await Campground.find({})
@@ -12,9 +14,14 @@ module.exports.newCampground = (req, res) => {
 
 
 module.exports.createCampground = async (req, res) => { 
+    const geoDate= await geocoder.forwardGeocode({
+        query: req.body.campground.location,
+        limit: 1
+    }).send()
     const newCampground = new Campground(req.body.campground)
     newCampground.images = req.files.map(f => ({url:f.path, filename:f.filename}))
-    newCampground.author = req.user._id    
+    newCampground.author = req.user._id   
+    newCampground.geometry = geoDate.body.features[0].geometry 
     await newCampground.save()
     console.log(newCampground)
     req.flash("success","キャンプ場を登録しました")

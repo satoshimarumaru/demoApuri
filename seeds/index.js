@@ -25,7 +25,12 @@ const seedDB = async () => {
             location:`${cities[randomCityIndex].prefecture}${cities[randomCityIndex].city}`,
             title:`${sample(descriptors)}・${sample(places)}`,
             price,
-            image: `https://picsum.photos/400?random=${Math.random()}`,
+            images:  [
+                {
+                url: 'https://res.cloudinary.com/dpsc6auav/image/upload/v1745764800/YelpCamp/ozvh4pdfofyx7yblv56g.jpg',
+                filename: 'YelpCamp/ozvh4pdfofyx7yblv56g'   
+                }
+                ],
             description:"都会の喧騒を離れ、澄んだ空気と美しい星空の下で過ごすひととき。ここでは、朝は鳥のさえずりとともに目覚め、昼は川のせせらぎを聞きながらリラックスし、夜は焚き火を囲んで語り合う、そんな贅沢な時間が流れています。",
         })
         await camp.save()

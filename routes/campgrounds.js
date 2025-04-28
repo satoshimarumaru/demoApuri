@@ -34,7 +34,7 @@ router.get("/new", isLoggedIn, campgrounds.newCampground)
 
 
 router.route("/:id")
-    .get(catchAsync (campgrounds.showCampground))
+    .get(isLoggedIn,catchAsync (campgrounds.showCampground))
     .put( validationCampground,isLoggedIn ,catchAsync (campgrounds.updateCampground))
     .delete(isLoggedIn, catchAsync(campgrounds.deleteCampground))
 // / キャンプ場一覧ページ
