@@ -24,6 +24,13 @@ const seedDB = async () => {
             author:"680613d0fd84be451067b88c",
             location:`${cities[randomCityIndex].prefecture}${cities[randomCityIndex].city}`,
             title:`${sample(descriptors)}・${sample(places)}`,
+            geometry:{
+                type: "Point",
+                coordinates: [
+                    cities[randomCityIndex].longitude,
+                    cities[randomCityIndex].latitude
+                ]
+            },
             price,
             images:  [
                 {
