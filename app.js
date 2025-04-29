@@ -22,6 +22,8 @@ const flash = require("connect-flash")
 const passport = require("passport")
 const LocalStrategy = require("passport-local")
 const User = require("./models/user")
+const MongoStore = require("connect-mongo")
+
 
 // postman使うために必要（下2行）
 const cors = require("cors");
@@ -34,9 +36,27 @@ app.use(express.urlencoded({extended:true}))
 app.use(methodOverride("_method"))
 app.use(express.static(path.join(__dirname, "public")))
 
+// 'mongodb://127.0.0.1:27017/yelp-camp'
+const dbUrl = process.env.DB_URL || 'mongodb://127.0.0.1:27017/yelp-camp'
+const secret = process.env.SECRET || "secret"
 // セッションの設定
+const store =  MongoStore.create({
+    mongoUrl: dbUrl,
+    crypto: {
+        secret,
+    },  
+    touchAfter: 24 * 60 * 60,
+})
+
+store.on("error", e => {
+    console.log("セッションのエラー",e)
+})
+
+
 const sessionConfig = {
-    secret: "mysecret",
+    store,
+    name: "session",
+    secret,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -64,13 +84,18 @@ app.use((req,res,next) => {
 })
 
 
-mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp',{useNewUrlParser:true,useUnifiedTopology:true,useCreateIndex:true})
-.then(() => {
-    console.log("DBにコネクションOK")
+mongoose.set('strictQuery', false); // 必要に応じて追加
+
+mongoose.connect(dbUrl, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
 })
-.catch(() => {
-    console.log("DBにコネクション失敗")
-})
+    .then(() => {
+        console.log("DBにコネクションOK");
+    })
+    .catch((err) => {
+        console.log("DBにコネクション失敗", err);
+    });
 
 app.get("/", (req,res) => {
     res.render("home")
@@ -96,9 +121,11 @@ app.use((err,req,res,next) => {
     res.status(statusCode).render("error", {err})
 })
 
+
+const port = process.env.PORT || 3000
 // サーバーの立ち上げ
-app.listen(3000,() => {
-    console.log("ポート3000で受付中")
+app.listen(port,() => {
+    console.log(`ポート${port}でサーバーが立ち上がりました`)
 })
 
 
